@@ -1,0 +1,654 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
+<meta name="theme-color" content="#0a0d14">
+<title>Тренажёр запоминания</title>
+<style>
+  :root {
+    --radius: 16px;
+    --radius-sm: 12px;
+  }
+
+  :root, [data-theme="dark"] {
+    --bg: #0a0d14;
+    --bg-soft: #10141f;
+    --surface: #161a26;
+    --surface-2: #1c2130;
+    --border: #232a3d;
+    --text: #e8eaf2;
+    --muted: #7e879e;
+    --muted-2: #565e75;
+    --accent: #7c5cff;
+    --accent-2: #9d7bff;
+    --accent-soft: rgba(124, 92, 255, 0.14);
+    --content-text: #f2f4fa;
+    --grad-1: rgba(124, 92, 255, 0.10);
+    --grad-2: rgba(56, 189, 248, 0.07);
+    --bottom-fade: rgba(10, 13, 20, 0);
+    --icon-color: #7e879e;
+    --danger: #ef4444;
+    --danger-soft: rgba(239, 68, 68, 0.12);
+  }
+
+  [data-theme="light"] {
+    --bg: #f6f7fb;
+    --bg-soft: #ffffff;
+    --surface: #ffffff;
+    --surface-2: #f0f2f8;
+    --border: #e2e5ee;
+    --text: #14172a;
+    --muted: #6b7280;
+    --muted-2: #9aa1b2;
+    --accent: #6d4aff;
+    --accent-2: #8b6bff;
+    --accent-soft: rgba(109, 74, 255, 0.12);
+    --content-text: #14172a;
+    --grad-1: rgba(109, 74, 255, 0.08);
+    --grad-2: rgba(56, 189, 248, 0.06);
+    --bottom-fade: rgba(246, 247, 251, 0);
+    --icon-color: #6b7280;
+    --danger: #dc2626;
+    --danger-soft: rgba(220, 38, 38, 0.10);
+  }
+
+  * {
+    box-sizing: border-box;
+    -webkit-tap-highlight-color: transparent;
+  }
+  html, body { height: 100%; margin: 0; }
+
+  body {
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    background: var(--bg);
+    background-image:
+      radial-gradient(900px 600px at 100% -10%, var(--grad-1), transparent 60%),
+      radial-gradient(700px 500px at -10% 110%, var(--grad-2), transparent 60%);
+    background-attachment: fixed;
+    color: var(--text);
+    overflow: hidden;
+    -webkit-font-smoothing: antialiased;
+    transition: background-color .25s, color .25s;
+
+    user-select: none;
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    -webkit-touch-callout: none;
+    -webkit-user-drag: none;
+  }
+
+  textarea {
+    user-select: text;
+    -webkit-user-select: text;
+    -webkit-touch-callout: default;
+  }
+
+  .app { display: flex; flex-direction: column; height: 100vh; height: 100dvh; }
+
+  .topbar {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 16px 20px 0; gap: 12px;
+    flex-shrink: 0;
+  }
+  .brand {
+    display: flex; align-items: center; gap: 10px;
+    font-weight: 600; font-size: 15px; letter-spacing: -0.01em;
+  }
+  .brand .dot {
+    width: 8px; height: 8px; border-radius: 50%;
+    background: var(--accent);
+    box-shadow: 0 0 12px var(--accent);
+  }
+  .actions { display: flex; gap: 8px; }
+
+  .icon-btn {
+    width: 40px; height: 40px;
+    display: grid; place-items: center;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    color: var(--icon-color);
+    cursor: pointer;
+    padding: 0;
+    transition: background .15s, color .15s, border-color .15s, transform .08s;
+    user-select: none; -webkit-user-select: none;
+    -webkit-touch-callout: none;
+    touch-action: manipulation;
+  }
+  .icon-btn:hover { background: var(--surface-2); color: var(--text); }
+  .icon-btn:active { transform: scale(0.96); }
+  .icon-btn svg { width: 18px; height: 18px; pointer-events: none; }
+
+  .main {
+    flex: 1; overflow-y: auto;
+    padding: 20px 16px 130px;
+    -webkit-overflow-scrolling: touch;
+    overscroll-behavior: contain;
+  }
+  .wrap { max-width: 760px; margin: 0 auto; }
+
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 20px;
+    transition: background-color .25s, border-color .25s;
+  }
+
+  h1 {
+    font-size: 22px; font-weight: 600;
+    letter-spacing: -0.02em;
+    margin: 0 0 6px; color: var(--text);
+  }
+  .subtitle {
+    font-size: 14px; color: var(--muted);
+    margin: 0 0 18px; line-height: 1.5;
+  }
+
+  textarea {
+    width: 100%; min-height: 180px;
+    background: var(--bg); color: var(--text);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    padding: 14px 16px;
+    font: 15px/1.6 inherit;
+    resize: vertical; outline: none;
+    transition: border-color .15s, box-shadow .15s, background-color .25s;
+  }
+  textarea:focus {
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px var(--accent-soft);
+  }
+  textarea::placeholder { color: var(--muted-2); }
+
+  .row {
+    display: flex; gap: 10px; flex-wrap: wrap;
+    margin-top: 14px;
+  }
+
+  .btn-primary {
+    display: inline-flex; align-items: center; gap: 8px;
+    background: var(--accent); color: #fff;
+    border: none; padding: 13px 22px;
+    border-radius: var(--radius-sm);
+    font: 600 15px inherit;
+    cursor: pointer;
+    transition: background .15s, transform .08s;
+    user-select: none; -webkit-user-select: none;
+    -webkit-touch-callout: none;
+    touch-action: manipulation;
+  }
+  .btn-primary:hover { background: var(--accent-2); }
+  .btn-primary:active { transform: scale(0.98); }
+  .btn-primary svg { width: 16px; height: 16px; pointer-events: none; }
+
+  .btn-secondary {
+    display: inline-flex; align-items: center; gap: 8px;
+    background: var(--surface-2);
+    color: var(--text);
+    border: 1px solid var(--border);
+    padding: 13px 18px;
+    border-radius: var(--radius-sm);
+    font: 600 15px inherit;
+    cursor: pointer;
+    transition: background .15s, transform .08s, border-color .15s, color .15s;
+    user-select: none; -webkit-user-select: none;
+    -webkit-touch-callout: none;
+    touch-action: manipulation;
+  }
+  .btn-secondary:hover { background: var(--border); }
+  .btn-secondary:active { transform: scale(0.98); }
+  .btn-secondary svg { pointer-events: none; }
+
+  .btn-danger {
+    background: var(--danger-soft);
+    color: var(--danger);
+    border-color: transparent;
+  }
+  .btn-danger:hover { background: var(--danger); color: #fff; }
+
+  .save-status {
+    font-size: 13px;
+    color: var(--muted);
+    margin-top: 10px;
+    height: 18px;
+    opacity: 0;
+    transition: opacity .25s;
+  }
+  .save-status.show { opacity: 1; }
+
+  .meta {
+    display: flex; align-items: center; justify-content: space-between;
+    font-size: 12.5px; color: var(--muted);
+    margin-bottom: 12px; padding: 0 4px;
+  }
+  .meta .badge {
+    background: var(--accent-soft); color: var(--accent);
+    padding: 4px 10px; border-radius: 999px;
+    font-weight: 600; font-size: 12px;
+  }
+  .meta .hint { color: var(--muted-2); }
+
+  .content-box {
+    font: 400 21px/2 'Georgia', 'Times New Roman', serif;
+    white-space: pre-wrap; word-wrap: break-word;
+    padding: 24px;
+    background: var(--bg-soft);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    min-height: 200px;
+    color: var(--content-text);
+
+    user-select: none;
+    -webkit-user-select: none;
+    -webkit-touch-callout: none;
+    -webkit-user-drag: none;
+    touch-action: pan-y;
+    pointer-events: none;
+
+    transform: translateZ(0);
+    backface-visibility: hidden;
+    contain: layout style paint;
+
+    /* Плавный переход блюра/прозрачности при смене уровня */
+    transition:
+      filter .35s ease,
+      opacity .35s ease,
+      background-color .25s,
+      color .25s,
+      border-color .25s;
+    will-change: filter, opacity;
+  }
+
+  .bottom-bar {
+    position: fixed; left: 0; right: 0; bottom: 0;
+    display: flex; gap: 10px;
+    padding: 12px 16px calc(14px + env(safe-area-inset-bottom));
+    background: linear-gradient(to top, var(--bg) 60%, var(--bottom-fade));
+    z-index: 20; pointer-events: none;
+    transition: background .25s;
+  }
+  .bottom-bar > * { pointer-events: auto; }
+
+  .bottom-bar button {
+    flex: 1; padding: 15px 10px;
+    border-radius: 14px;
+    border: 1px solid var(--border);
+    background: var(--surface);
+    color: var(--text);
+    font: 600 14.5px inherit;
+    cursor: pointer;
+
+    user-select: none;
+    -webkit-user-select: none;
+    -webkit-touch-callout: none;
+    touch-action: manipulation;
+    -webkit-tap-highlight-color: transparent;
+
+    transition: background .12s, transform .08s, border-color .12s, color .12s;
+    display: flex; align-items: center; justify-content: center; gap: 6px;
+    outline: none;
+  }
+  .bottom-bar button * { pointer-events: none; }
+  .bottom-bar button:hover { background: var(--surface-2); }
+  .bottom-bar button:active { transform: scale(0.97); }
+  .bottom-bar button:disabled { opacity: .35; cursor: not-allowed; }
+
+  .bottom-bar .eye {
+    background: var(--accent);
+    border-color: var(--accent);
+    color: #fff;
+    flex: 1.2;
+    touch-action: none;
+    -webkit-touch-callout: none;
+    -webkit-user-select: none;
+    user-select: none;
+  }
+  .bottom-bar .eye:hover { background: var(--accent-2); }
+  .bottom-bar .eye.on {
+    background: #22c55e; border-color: #22c55e;
+    box-shadow: 0 0 0 4px rgba(34, 197, 94, 0.18);
+  }
+
+  .hidden-screen { display: none !important; }
+
+  @media (max-width: 480px) {
+    .content-box { font-size: 19px; padding: 20px; line-height: 1.9; }
+    .main { padding: 16px 12px 130px; }
+    .topbar { padding: 14px 16px 0; }
+    h1 { font-size: 19px; }
+    .brand span:last-child { font-size: 14px; }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .content-box { transition: none; }
+  }
+</style>
+</head>
+<body>
+
+<div class="app">
+
+  <div class="topbar">
+    <div class="brand">
+      <span class="dot"></span>
+      <span>Тренажёр запоминания</span>
+    </div>
+    <div class="actions">
+      <button class="icon-btn" id="themeBtn" type="button" title="Переключить тему">
+        <svg id="themeIcon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>
+        </svg>
+      </button>
+      <button class="icon-btn" id="fsBtn" type="button" title="Полный экран">
+        <svg id="fsIcon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3"/>
+        </svg>
+      </button>
+    </div>
+  </div>
+
+  <div class="main">
+    <div class="wrap">
+
+      <div id="setupPanel">
+        <div class="card">
+          <h1>Вставь текст</h1>
+          <p class="subtitle">Жми «Начать», затем «Выучил →». Текст будет постепенно уходить в дымку, пока не останется один силуэт. Глазок (удерживать) показывает оригинал.</p>
+          <textarea id="source" placeholder="Вставь сюда текст..."></textarea>
+
+          <div class="row">
+            <button class="btn-primary" id="startBtn" type="button">
+              Начать
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 5l7 7-7 7"/></svg>
+            </button>
+            <button class="btn-secondary" id="saveBtn" type="button">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><path d="M17 21v-8H7v8M7 3v5h8"/></svg>
+              Сохранить
+            </button>
+            <button class="btn-secondary btn-danger" id="clearBtn" type="button">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2m3 0v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"/></svg>
+              Очистить
+            </button>
+          </div>
+
+          <div class="save-status" id="saveStatus">Текст сохранён</div>
+        </div>
+      </div>
+
+      <div id="practicePanel" class="hidden-screen">
+        <div class="meta">
+          <span class="badge" id="levelInfo">Уровень 1 / 6</span>
+          <span class="hint" id="hintInfo">Оригинал</span>
+        </div>
+        <div class="content-box" id="display"></div>
+      </div>
+
+    </div>
+  </div>
+
+  <div class="bottom-bar hidden-screen" id="bottomBar">
+    <button id="backBtn" type="button">← Назад</button>
+    <button id="learnedBtn" type="button">Выучил →</button>
+    <button class="eye" id="eyeBtn" type="button">👁 Показать</button>
+  </div>
+
+</div>
+
+<script>
+(function() {
+  'use strict';
+
+  var MAX_LEVEL = 6;
+  var STORAGE_KEY = 'trainer-text';
+  var THEME_KEY = 'trainer-theme';
+
+  var level = 1;
+  var revealing = false;
+  var originalText = '';
+
+  var setupPanel    = document.getElementById('setupPanel');
+  var practicePanel = document.getElementById('practicePanel');
+  var bottomBar     = document.getElementById('bottomBar');
+  var source        = document.getElementById('source');
+  var display       = document.getElementById('display');
+  var levelInfo     = document.getElementById('levelInfo');
+  var hintInfo      = document.getElementById('hintInfo');
+  var backBtn       = document.getElementById('backBtn');
+  var learnedBtn    = document.getElementById('learnedBtn');
+  var eyeBtn        = document.getElementById('eyeBtn');
+  var fsBtn         = document.getElementById('fsBtn');
+  var fsIcon        = document.getElementById('fsIcon');
+  var themeBtn      = document.getElementById('themeBtn');
+  var themeIcon     = document.getElementById('themeIcon');
+  var saveBtn       = document.getElementById('saveBtn');
+  var clearBtn      = document.getElementById('clearBtn');
+  var saveStatus    = document.getElementById('saveStatus');
+
+  var HINTS = {
+    1: 'Оригинал',
+    2: 'Лёгкая дымка',
+    3: 'Заметно мягче',
+    4: 'Только контуры',
+    5: 'Силуэт',
+    6: 'По памяти'
+  };
+
+  // Прогрессивный блюр всего текста целиком.
+  // Каждый уровень лишь чуть мутнее предыдущего — по силуэту всё ещё угадывается.
+  var BLUR = {
+    1: { blur: 0,   opacity: 1    },
+    2: { blur: 0.8, opacity: 1    },
+    3: { blur: 1.6, opacity: 0.95 },
+    4: { blur: 2.6, opacity: 0.88 },
+    5: { blur: 4.0, opacity: 0.72 },
+    6: { blur: 0,   opacity: 0    }
+  };
+
+  function esc(s) {
+    return s.replace(/[&<>"']/g, function(c) {
+      return ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'})[c];
+    });
+  }
+
+  // Гасим системные меню/выделение вне textarea
+  document.addEventListener('contextmenu', function(e) {
+    if (e.target.tagName !== 'TEXTAREA') e.preventDefault();
+  }, { capture: true });
+  document.addEventListener('selectstart', function(e) {
+    if (e.target.tagName !== 'TEXTAREA') e.preventDefault();
+  }, { capture: true });
+  document.addEventListener('dragstart', function(e) {
+    if (e.target.tagName !== 'TEXTAREA') e.preventDefault();
+  }, { capture: true });
+
+  function render() {
+    var lvl = revealing ? 1 : level;
+
+    // Текст всегда полный, размываем сам блок целиком
+    if (display.dataset.text !== originalText) {
+      display.textContent = originalText;
+      display.dataset.text = originalText;
+    }
+
+    var cfg = BLUR[lvl];
+    if (lvl >= MAX_LEVEL && !revealing) {
+      // Полностью невидимо
+      display.style.filter = 'blur(10px)';
+      display.style.opacity = '0';
+    } else {
+      display.style.filter = cfg.blur > 0 ? 'blur(' + cfg.blur + 'px)' : 'none';
+      display.style.opacity = String(cfg.opacity);
+    }
+
+    levelInfo.textContent = 'Уровень ' + lvl + ' / ' + MAX_LEVEL;
+    hintInfo.textContent  = revealing ? '👁 Оригинал' : HINTS[level];
+    learnedBtn.disabled   = level >= MAX_LEVEL;
+    backBtn.textContent   = level > 1 ? '← Назад' : '← В меню';
+  }
+
+  function goToMenu() {
+    practicePanel.classList.add('hidden-screen');
+    bottomBar.classList.add('hidden-screen');
+    setupPanel.classList.remove('hidden-screen');
+    revealing = false;
+    eyeBtn.classList.remove('on');
+    eyeBtn.textContent = '👁 Показать';
+  }
+
+  function startPractice() {
+    if (!source.value.trim()) { alert('Введи текст'); return; }
+    originalText = source.value;
+    display.dataset.text = ''; // заставим перерисовать
+    level = 1;
+    revealing = false;
+    setupPanel.classList.add('hidden-screen');
+    practicePanel.classList.remove('hidden-screen');
+    bottomBar.classList.remove('hidden-screen');
+    render();
+  }
+
+  document.getElementById('startBtn').addEventListener('click', startPractice);
+
+  backBtn.addEventListener('click', function() {
+    if (level > 1) { level--; render(); } else { goToMenu(); }
+  });
+
+  learnedBtn.addEventListener('click', function() {
+    if (level < MAX_LEVEL) { level++; render(); }
+  });
+
+  function showOriginal(e) {
+    if (e && e.cancelable) e.preventDefault();
+    if (revealing) return;
+    revealing = true;
+    eyeBtn.classList.add('on');
+    eyeBtn.textContent = '👁 Оригинал';
+    render();
+  }
+  function hideOriginal() {
+    if (!revealing) return;
+    revealing = false;
+    eyeBtn.classList.remove('on');
+    eyeBtn.textContent = '👁 Показать';
+    render();
+  }
+
+  eyeBtn.addEventListener('pointerdown', showOriginal);
+  eyeBtn.addEventListener('pointerup', hideOriginal);
+  eyeBtn.addEventListener('pointercancel', hideOriginal);
+  eyeBtn.addEventListener('pointerleave', hideOriginal);
+
+  eyeBtn.addEventListener('touchstart', function(e) {
+    e.preventDefault();
+    if (navigator.vibrate) { try { navigator.vibrate(0); } catch(_) {} }
+  }, { passive: false });
+  eyeBtn.addEventListener('touchmove', function(e) { e.preventDefault(); }, { passive: false });
+  eyeBtn.addEventListener('touchend', function(e) { e.preventDefault(); }, { passive: false });
+  eyeBtn.addEventListener('contextmenu', function(e) { e.preventDefault(); });
+
+  var statusTimer = null;
+  function showStatus(msg) {
+    saveStatus.textContent = msg;
+    saveStatus.classList.add('show');
+    clearTimeout(statusTimer);
+    statusTimer = setTimeout(function() {
+      saveStatus.classList.remove('show');
+    }, 1800);
+  }
+
+  saveBtn.addEventListener('click', function() {
+    try {
+      localStorage.setItem(STORAGE_KEY, source.value);
+      showStatus('Текст сохранён');
+    } catch(e) {
+      showStatus('Не удалось сохранить');
+    }
+  });
+
+  clearBtn.addEventListener('click', function() {
+    if (!confirm('Очистить сохранённый текст?')) return;
+    try { localStorage.removeItem(STORAGE_KEY); } catch(e) {}
+    source.value = '';
+    source.focus();
+    showStatus('Текст очищен');
+  });
+
+  try {
+    var saved = localStorage.getItem(STORAGE_KEY);
+    if (saved && saved.trim()) {
+      source.value = saved;
+    } else {
+      source.value = 'Вставь сюда текст, который хочешь выучить. Нажимай «Выучил», чтобы текст постепенно уходил в дымку, пока не останется один силуэт. На последнем уровне текста не видно совсем — воспроизведи его по памяти. Глазок (удерживать) показывает оригинал.';
+    }
+  } catch(e) {
+    source.value = 'Вставь сюда текст...';
+  }
+
+  var SUN  = '<circle cx="12" cy="12" r="4"/><path d="M12 2v2m0 16v2M4.93 4.93l1.41 1.41m11.32 11.32 1.41 1.41M2 12h2m16 0h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41"/>';
+  var MOON = '<path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>';
+
+  function applyTheme(theme) {
+    document.documentElement.setAttribute('data-theme', theme);
+    themeIcon.innerHTML = theme === 'dark' ? MOON : SUN;
+    themeBtn.title = theme === 'dark' ? 'Светлая тема' : 'Тёмная тема';
+    var meta = document.querySelector('meta[name="theme-color"]');
+    if (meta) meta.setAttribute('content', theme === 'dark' ? '#0a0d14' : '#f6f7fb');
+  }
+
+  var savedTheme = 'dark';
+  try { savedTheme = localStorage.getItem(THEME_KEY) || 'dark'; } catch(e) {}
+  applyTheme(savedTheme);
+
+  themeBtn.addEventListener('click', function() {
+    var cur = document.documentElement.getAttribute('data-theme');
+    var next = cur === 'dark' ? 'light' : 'dark';
+    applyTheme(next);
+    try { localStorage.setItem(THEME_KEY, next); } catch(e) {}
+  });
+
+  var FS_ENTER = '<path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3"/>';
+  var FS_EXIT  = '<path d="M8 3v3a2 2 0 0 1-2 2H3m18 0h-3a2 2 0 0 1-2-2V3m0 18v-3a2 2 0 0 1 2-2h3M3 16h3a2 2 0 0 1 2 2v3"/>';
+
+  function toggleFullscreen() {
+    try {
+      if (!document.fullscreenElement && !document.webkitFullscreenElement) {
+        var el = document.documentElement;
+        if (el.requestFullscreen) el.requestFullscreen();
+        else if (el.webkitRequestFullscreen) el.webkitRequestFullscreen();
+      } else {
+        if (document.exitFullscreen) document.exitFullscreen();
+        else if (document.webkitExitFullscreen) document.webkitExitFullscreen();
+      }
+    } catch (err) {}
+  }
+
+  function updateFsIcon() {
+    var active = !!(document.fullscreenElement || document.webkitFullscreenElement);
+    fsIcon.innerHTML = active ? FS_EXIT : FS_ENTER;
+    fsBtn.title = active ? 'Выйти из полного экрана' : 'Полный экран';
+  }
+
+  fsBtn.addEventListener('click', toggleFullscreen);
+  document.addEventListener('fullscreenchange', updateFsIcon);
+  document.addEventListener('webkitfullscreenchange', updateFsIcon);
+  updateFsIcon();
+
+  document.addEventListener('keydown', function(e) {
+    if (practicePanel.classList.contains('hidden-screen')) return;
+    if (e.target.tagName === 'TEXTAREA') return;
+    if (e.key === 'ArrowLeft')  { e.preventDefault(); backBtn.click(); }
+    if (e.key === 'ArrowRight') { e.preventDefault(); learnedBtn.click(); }
+    if (e.code === 'Space' && !e.repeat) { e.preventDefault(); showOriginal(); }
+    if (e.key === 'f' || e.key === 'F' || e.key === 'а' || e.key === 'А') { toggleFullscreen(); }
+    if (e.key === 't' || e.key === 'T' || e.key === 'е' || e.key === 'Е') { themeBtn.click(); }
+  });
+  document.addEventListener('keyup', function(e) {
+    if (e.code === 'Space') hideOriginal();
+  });
+})();
+</script>
+</body>
+</html>
