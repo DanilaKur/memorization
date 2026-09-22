@@ -252,7 +252,6 @@
     backface-visibility: hidden;
     contain: layout style paint;
 
-    /* Плавный переход блюра/прозрачности при смене уровня */
     transition:
       filter .35s ease,
       opacity .35s ease,
@@ -355,9 +354,9 @@
 
       <div id="setupPanel">
         <div class="card">
-          <h1>Вставь текст</h1>
-          <p class="subtitle">Жми «Начать», затем «Выучил →». Текст будет постепенно уходить в дымку, пока не останется один силуэт. Глазок (удерживать) показывает оригинал.</p>
-          <textarea id="source" placeholder="Вставь сюда текст..."></textarea>
+          <h1>Вставьте текст</h1>
+          <p class="subtitle">Введите текст для изучения. Нажмите «Начать», затем повышайте уровень кнопкой «Выучил». Удерживайте кнопку с глазом, чтобы увидеть оригинал.</p>
+          <textarea id="source" placeholder="Введите текст..."></textarea>
 
           <div class="row">
             <button class="btn-primary" id="startBtn" type="button">
@@ -429,15 +428,13 @@
 
   var HINTS = {
     1: 'Оригинал',
-    2: 'Лёгкая дымка',
-    3: 'Заметно мягче',
-    4: 'Только контуры',
-    5: 'Силуэт',
+    2: 'Уровень 2',
+    3: 'Уровень 3',
+    4: 'Уровень 4',
+    5: 'Уровень 5',
     6: 'По памяти'
   };
 
-  // Прогрессивный блюр всего текста целиком.
-  // Каждый уровень лишь чуть мутнее предыдущего — по силуэту всё ещё угадывается.
   var BLUR = {
     1: { blur: 0,   opacity: 1    },
     2: { blur: 0.8, opacity: 1    },
@@ -453,7 +450,6 @@
     });
   }
 
-  // Гасим системные меню/выделение вне textarea
   document.addEventListener('contextmenu', function(e) {
     if (e.target.tagName !== 'TEXTAREA') e.preventDefault();
   }, { capture: true });
@@ -467,7 +463,6 @@
   function render() {
     var lvl = revealing ? 1 : level;
 
-    // Текст всегда полный, размываем сам блок целиком
     if (display.dataset.text !== originalText) {
       display.textContent = originalText;
       display.dataset.text = originalText;
@@ -475,7 +470,6 @@
 
     var cfg = BLUR[lvl];
     if (lvl >= MAX_LEVEL && !revealing) {
-      // Полностью невидимо
       display.style.filter = 'blur(10px)';
       display.style.opacity = '0';
     } else {
@@ -499,9 +493,9 @@
   }
 
   function startPractice() {
-    if (!source.value.trim()) { alert('Введи текст'); return; }
+    if (!source.value.trim()) { alert('Введите текст'); return; }
     originalText = source.value;
-    display.dataset.text = ''; // заставим перерисовать
+    display.dataset.text = '';
     level = 1;
     revealing = false;
     setupPanel.classList.add('hidden-screen');
@@ -581,10 +575,10 @@
     if (saved && saved.trim()) {
       source.value = saved;
     } else {
-      source.value = 'Вставь сюда текст, который хочешь выучить. Нажимай «Выучил», чтобы текст постепенно уходил в дымку, пока не останется один силуэт. На последнем уровне текста не видно совсем — воспроизведи его по памяти. Глазок (удерживать) показывает оригинал.';
+      source.value = 'Вставьте сюда текст для изучения. Нажмите «Начать» и повышайте уровень кнопкой «Выучил». Для показа оригинала удерживайте кнопку с глазом.';
     }
   } catch(e) {
-    source.value = 'Вставь сюда текст...';
+    source.value = 'Введите текст...';
   }
 
   var SUN  = '<circle cx="12" cy="12" r="4"/><path d="M12 2v2m0 16v2M4.93 4.93l1.41 1.41m11.32 11.32 1.41 1.41M2 12h2m16 0h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41"/>';
